@@ -107,7 +107,7 @@
 </template>
 
 <script setup lang="ts">
-import { API_URL } from "../../config"
+import { VUE_APP_API_URL } from "../../config"
 import { reactive,ref } from "vue";
 import { z } from "zod";
 import useValidation from '../composables/useValidation';
@@ -130,7 +130,7 @@ const initialState = {
 
 const form = reactive({...initialState});
 
-const { validate, isValid, errors, getError, clearErrors, scrolltoError } = useValidation(validationSchema, form, {
+const { validate, isValid, errors, getError, scrolltoError } = useValidation(validationSchema, form, {
   mode: 'lazy',
 });
 
@@ -144,18 +144,21 @@ const sendTest = async () => {
   await validate();
 
   if (isValid.value) {
-    const response = await fetch(`${API_URL}/send`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(form),
-    });
-
-    const data = await response.json();
-    if(data.errors || data.error) {
+    try {
+      const response = await fetch(`${VUE_APP_API_URL}/send`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(form),
+      })
+      const data = await response.json();
+      if(data.errors || data.error) {
+        alert('Send to Wedhook failed')
+      } else {
+        alert('Send to Wedhook done')
+        typeList.value?.classList.remove('show')
+      }
+    } catch(e) {
       alert('Send to Wedhook failed')
-    } else {
-      alert('Send to Wedhook done')
-      typeList.value?.classList.remove('show')
     }
   } else {
     scrolltoError('.invalid', { offset: 24 });
@@ -168,21 +171,26 @@ const save = async () => {
   await validate();
 
   if (isValid.value) {
-    const response = await fetch(`${API_URL}/store`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      const response = await fetch(`${VUE_APP_API_URL}/store`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      
+      const data = await response.json();
+      if(data.errors || data.error) {
+        alert('Save data failed')
+      } else {
+        alert('Save data done')
+        typeList.value?.classList.remove('show')
+        console.log(errors.value)
 
-    const data = await response.json();
-    if(data.errors || data.error) {
+      }
+    } catch(e) {
       alert('Save data failed')
-    } else {
-      alert('Save data done')
-      typeList.value?.classList.remove('show')
-      console.log(errors.value)
-
     }
+    
   } else {
     scrolltoError('.invalid', { offset: 24 });
   }
